@@ -1,0 +1,7 @@
+#!/bin/sh
+
+killall authloop
+kdestroy
+unlog
+kinit -r 360d jhamrick@CSAIL.MIT.EDU
+authloop athena csail &

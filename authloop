@@ -1,0 +1,14 @@
+#!/bin/sh
+
+NUM=`ps -C authloop | grep -c authloop`
+if [ $NUM -gt 2 ]
+then
+    echo "One authloop process is already running."
+    wait
+    exit 0
+else
+    while kinit -R; do
+	aklog $@
+	sleep 2h
+    done
+fi

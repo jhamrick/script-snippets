@@ -1,0 +1,76 @@
+#!/usr/bin/python
+
+
+import optparse
+import os
+import subprocess
+import sys
+import tempfile
+
+
+DISTS=set(['jaunty', 'karmic', 'lucid', 'maverick'])
+
+
+def main():
+    parser = optparse.OptionParser(
+        usage="usage: %prog [options] <.dsc file>",
+        description="Upload a package to a Launchpad PPA for multiple releases.",
+        )
+    parser.add_option('-f', '--force',
+                      help="Don't ask questions; do whatever is necessary.",
+                      action='store_true',
+                      dest='force',
+                      default=False)
+    parser.add_option('-p', '--ppa',
+                      help='Which PPA to upload to.',
+                      dest='ppa',
+                      default='broder/ppa')
+    parser.add_option('-x', '--exclude',
+                      help="Don't upload to a given release.",
+                      action='append',
+                      dest='exclude',
+                      default=[])
+
+    options, args = parser.parse_args()
+    if len(args) != 1:
+        parser.error('incorrect number of arguments')
+
+    dsc = os.path.abspath(args[0])
+    use_dists = DISTS - set(options.exclude)
+
+    dsc_dir, dsc_file = os.path.split(dsc)
+    package, version = dsc_file[:-4].split('_')
+    upstream_version = version.split('-')[0]
+    package_dir = '%s-%s' % (package, upstream_version)
+
+    if os.path.exists(os.path.join(dsc_dir, package_dir)):
+        print 'W: Package %s, version %s is already unpacked.' % (
+            package, upstream_version)
+        if not options.force:
+            x = raw_input('Ok to proceed? This will overwrite the package. [Y/n]? ')
+            if x and x.lower()[0] == 'n':
+                print 'Cancelling.'
+                sys.exit(1)
+
+    for d in use_dists:
+        new_version = '%s~%s1~ppa1' % (version, d)
+        subprocess.check_call(['dpkg-source', '-x', dsc_file],
+                              cwd=dsc_dir)
+        subprocess.check_call(['dch',
+                               '-v', new_version,
+                               '-b',
+                               '--force-distribution',
+                               '-D', d,
+                               '-p',
+                               'Upload for %s' % d],
+                              cwd=os.path.join(dsc_dir, package_dir))
+        subprocess.check_call(['debuild', '-S'],
+                              cwd=os.path.join(dsc_dir, package_dir))
+        subprocess.check_call(['dput', 
+                               'ppa:%s' % options.ppa,
+                               '%s_%s_source.changes' % (package, new_version)],
+                              cwd=dsc_dir)
+
+
+if __name__ == '__main__':
+    main()
