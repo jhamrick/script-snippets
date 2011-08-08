@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+autossh -f -N -n -q -T -D 8080 jhamrick@blueberry-meringue.mit.edu
