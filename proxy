@@ -1,3 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
-autossh -f -N -n -q -T -D 8080 jhamrick@blueberry-meringue.mit.edu
+killall autossh
+autossh -f -N -n -q -T -D 8080 jhamrick@linerva.mit.edu
