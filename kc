@@ -1,7 +1,13 @@
 #!/bin/sh
 
-killall authloop
-kdestroy
-unlog
-kinit -r 360d jhamrick@CSAIL.MIT.EDU
-authloop athena.mit.edu csail.mit.edu &
+if [ $(uname -s) == "Darwin" ]; then
+    kinit jhamrick@CSAIL.MIT.EDU
+    aklog -force
+else
+    killall authloop
+    kdestroy
+    unlog
+    kinit jhamrick@CSAIL.MIT.EDU
+    authloop athena csail &
+fi
+
