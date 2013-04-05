@@ -4,4 +4,4 @@ killall authloop
 kdestroy
 unlog
 kinit -r 360d jhamrick@CSAIL.MIT.EDU
-authloop athena csail &
+authloop athena.mit.edu csail.mit.edu &
