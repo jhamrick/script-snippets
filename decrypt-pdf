@@ -1,0 +1,4 @@
+#!/bin/bash
+
+qpdf --decrypt "$1" out.pdf
+mv out.pdf "$1"
