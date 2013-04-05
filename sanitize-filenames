@@ -6,15 +6,18 @@ import re
 import shutil
 
 valid = re.compile(r'^[0-9A-z. \-_!\+]$')
+DRYRUN = False
 
 def sanitize_string(str):
     newstr = [x if valid.match(x) else "_" for x in str]
+    while len(newstr) > 0 and newstr[-1] in ('.', ' '):
+        newstr = newstr[:-1]
     return ''.join(newstr)
 
 def sanitize(filename):
     # if it's a directory, sanitize children first
     if os.path.isdir(filename):
-        files = os.listdir(filename)
+        files = sorted(os.listdir(filename))
         for f in files:
             sanitize(os.path.join(filename, f))
 
@@ -25,24 +28,47 @@ def sanitize(filename):
 
     # check to be sure we're not overwriting a file that aready exists
     if newname == filename:
-        choice = 's'
-    elif os.path.exists(newname):
-        print "File '%s' (was '%s') already exists!" % (newbasename, basename)
-        print "(o)verwrite, (d)elete, or (s)kip?"
         choice = None
-        while choice not in ('o', 'd', 's'):
+    elif os.path.exists(newname):
+        print "File '%s' (was '%s') already exists!" % (newname, filename)
+        print "(o)verwrite, (d)elete, (s)kip, or (r)ename?"
+        choice = None
+        while choice not in ('o', 'd', 's', 'r'):
             choice = raw_input()
     else:
         choice = 'o'
 
+    if DRYRUN:
+        prefix = 'Would '
+    else:
+        prefix = ''
     if choice == 'o':
-        print "Move '%s' --> '%s'" % (filename, newname)
-        shutil.move(filename, newname)
+        print "%smove '%s' --> '%s'" % (prefix, filename, newname)
+        if not DRYRUN:
+            shutil.move(filename, newname)
     elif choice == 'd':
-        print "Delete '%s'" % filename
-        os.remove(filename)
+        print "%sdelete '%s'" % (prefix, filename)
+	if not DRYRUN:
+            os.remove(filename)
     elif choice == 's':
-        print "Skip '%s'" % filename
+        print "%sskip '%s'" % (prefix, filename)
+    elif choice == 'r':
+        while True:
+            print "Please enter the new filename (not including path):"
+            custombasename = raw_input()
+            scustombasename = sanitize_string(custombasename)
+            customname = os.path.join(path, scustombasename)
+            if custombasename != scustombasename or os.path.exists(customname):
+                print "Invalid filename, try again."
+            else:
+                break
+        print "%smove '%s' --> '%s'" % (prefix, filename, customname)
+        if not DRYRUN:
+            shutil.move(filename, customname)
+    elif choice is None:
+        pass
+    else:
+        raise ValueError
 
 if __name__ == "__main__":
     for fn in sys.argv[1:]:
