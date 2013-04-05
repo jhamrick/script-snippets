@@ -1,0 +1,50 @@
+#!/usr/bin/python
+
+import os
+import sys
+import re
+import shutil
+
+valid = re.compile(r'^[0-9A-z. \-_!\+]$')
+
+def sanitize_string(str):
+    newstr = [x if valid.match(x) else "_" for x in str]
+    return ''.join(newstr)
+
+def sanitize(filename):
+    # if it's a directory, sanitize children first
+    if os.path.isdir(filename):
+        files = os.listdir(filename)
+        for f in files:
+            sanitize(os.path.join(filename, f))
+
+    # convert the filename
+    path, basename = os.path.split(filename)
+    newbasename = sanitize_string(basename)
+    newname = os.path.join(path, newbasename)
+
+    # check to be sure we're not overwriting a file that aready exists
+    if newname == filename:
+        choice = 's'
+    elif os.path.exists(newname):
+        print "File '%s' (was '%s') already exists!" % (newbasename, basename)
+        print "(o)verwrite, (d)elete, or (s)kip?"
+        choice = None
+        while choice not in ('o', 'd', 's'):
+            choice = raw_input()
+    else:
+        choice = 'o'
+
+    if choice == 'o':
+        print "Move '%s' --> '%s'" % (filename, newname)
+        shutil.move(filename, newname)
+    elif choice == 'd':
+        print "Delete '%s'" % filename
+        os.remove(filename)
+    elif choice == 's':
+        print "Skip '%s'" % filename
+
+if __name__ == "__main__":
+    for fn in sys.argv[1:]:
+        sanitize(fn)
+        
