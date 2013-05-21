@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Converts all .flac files in a folder to .m4a using Apple Lossless
+# compression
+
+for i in *.flac; do
+    ffmpeg -i "$i" -acodec alac "`basename "$i" .flac`.m4a"
+done
