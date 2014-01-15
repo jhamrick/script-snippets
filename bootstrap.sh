@@ -19,7 +19,11 @@ function doIt() {
     for i in $(ls -a); do 
 	if [ $i != '.' -a $i != '..' -a $i != '.git' -a $i != '.DS_Store' -a $i != 'bootstrap.sh' -a $i != 'README.md' ]; then 
 	    echo "$i"
-	    gcp -alr "$i" "$HOME/bin/"
+            if [ $(uname) == "Darwin" ]; then
+	        gcp -alrf "$i" "$HOME/bin/"
+            else
+                cp -alrf "$i" "$HOME/bin/"
+            fi
 	fi
     done
 }
