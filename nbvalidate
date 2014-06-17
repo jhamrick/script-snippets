@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+import sys
+import json
+from path import path
+from IPython.nbformat.current import read, write
+from IPython.nbformat.validator import validate
+
+import logging
+logging.basicConfig(level="INFO")
+logger = logging.getLogger()
+
+import IPython.nbformat.current
+IPython.nbformat.current.logger = logger
+
+nbs = [path(x) for x in sys.argv[1:]]
+for nb in nbs:
+    print nb
+    
+    # with open(nb, 'r') as fh:
+    #     n = read(fh, 'ipynb')
+
+    with open(nb, 'r') as fh:
+        n = json.load(fh)
+
+    errors = validate(n)
+    if len(errors) > 0:
+        print "Number of errors:", len(errors)
+        print errors[0]
+    else:
+        print "No errors!"
+
+    # with open(nb, 'w') as fh:
+    #     write(n, fh, 'ipynb')
