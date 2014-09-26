@@ -36,6 +36,7 @@ THE SOFTWARE.
 import time
 import datetime
 import logging
+import os
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from boto.mturk.connection import MTurkConnection
 
@@ -74,8 +75,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # connect to turk
-    aws_access_key_id = os.env['AWS_ACCESS_KEY_ID']
-    aws_secret_access_key = os.env['AWS_SECRET_ACCESS_KEY']
+    aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID']
+    aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
     conn = MTurkConnection(aws_access_key_id, aws_secret_access_key)
 
     while True:

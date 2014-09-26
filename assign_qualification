@@ -14,20 +14,44 @@ if __name__ == "__main__":
         metavar="QUALIFICATION",
         help="Qualification id.")
     parser.add_argument(
+        "--value",
+        default=1,
+        type=int,
+        help="Qualification score.")
+    parser.add_argument(
         "workers",
         metavar="WORKER",
-        nargs="+",
+        nargs="*",
         help="Worker id.")
 
     args = parser.parse_args()
 
     print "Connecting to mechanical turk..."
-    aws_access_key_id = os.env['AWS_ACCESS_KEY_ID']
-    aws_secret_access_key = os.env['AWS_SECRET_ACCESS_KEY']
+    aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID']
+    aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
     conn = MTurkConnection(aws_access_key_id, aws_secret_access_key)
 
+    # get workers who already have the qualification
+    results = conn.get_qualifications_for_qualification_type(args.qualification)
+    results = [x.SubjectId for x in results]
+
     for worker in args.workers:
-       print "Assigning qualification '%s' to worker '%s'" % (args.qualification, worker)
-       result = conn.assign_qualification(args.qualification, worker)
-       if result != []:
-          print result
+        # if the worker doesn't already have the qualification, then
+        # assign it, otherwise just update the qualification score
+        if worker not in results:
+            print "Assigning qualification '%s' to worker '%s'" % (args.qualification, worker)
+            result = conn.assign_qualification(args.qualification, worker, args.value)
+            if result != []:
+                print result
+
+        else:
+            print "Updating qualification '%s' for worker '%s'" % (args.qualification, worker)
+            result = conn.update_qualification_score(args.qualification, worker, args.value)
+            if result != []:
+                print result
+
+    # print out the current set of workers with the qualification
+    results = conn.get_qualifications_for_qualification_type(args.qualification)
+    print "%d workers with qualification %s:" % (len(results), args.qualification)
+    for result in results:
+        print "%s (value: %s)" % (result.SubjectId, result.IntegerValue)
